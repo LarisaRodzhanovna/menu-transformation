@@ -1,0 +1,613 @@
+<title>Меню Transformation 2.0</title>
+<meta name="description" content="Рецепты меню по месяцам: поиск по названию и ингредиентам, просмотр по дням месяца.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2EFE6;
+    --surface:#FBFAF5;
+    --surface-2:#FFFFFF;
+    --text:#232420;
+    --text-muted:#736C5C;
+    --accent:#4C6354;
+    --accent-ink:#F4F2E9;
+    --accent-2:#AD8A52;
+    --border:#DFD9C6;
+    --border-soft:#EAE5D6;
+    --mark:#F3D488;
+    --shadow: 0 1px 2px rgba(35,36,32,.06), 0 8px 24px -12px rgba(35,36,32,.18);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1B1A16;
+      --surface:#242320;
+      --surface-2:#2A2925;
+      --text:#EEEAE0;
+      --text-muted:#A79E8C;
+      --accent:#8FAE97;
+      --accent-ink:#15201A;
+      --accent-2:#D7B26F;
+      --border:#3B372E;
+      --border-soft:#332F27;
+      --mark:#6B5322;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 26px -12px rgba(0,0,0,.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1B1A16;
+    --surface:#242320;
+    --surface-2:#2A2925;
+    --text:#EEEAE0;
+    --text-muted:#A79E8C;
+    --accent:#8FAE97;
+    --accent-ink:#15201A;
+    --accent-2:#D7B26F;
+    --border:#3B372E;
+    --border-soft:#332F27;
+    --mark:#6B5322;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 26px -12px rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-inline:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:"Playfair Display", Georgia, "Times New Roman", serif;
+    font-weight:600;
+    text-wrap:balance;
+    margin:0;
+  }
+  a{color:inherit;}
+  button{font:inherit;}
+
+  .wrap{max-width:980px;margin:0 auto;padding-inline:20px;}
+
+  /* header */
+  header.top{
+    position:sticky;
+    top:env(safe-area-inset-top,0px);
+    z-index:40;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .top-inner{
+    max-width:980px;margin:0 auto;padding:14px 20px 12px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .top-row1{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .brand h1{font-size:22px;letter-spacing:.01em;}
+  .brand .sub{color:var(--text-muted);font-size:13px;}
+  .rules-btn{
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .rules-btn:hover{border-color:var(--accent);}
+
+  .search-row{position:relative;}
+  .search-row input{
+    width:100%;
+    padding:12px 42px 12px 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    font-size:15px;
+    font-family:inherit;
+  }
+  .search-row input::placeholder{color:var(--text-muted);}
+  .search-row input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .search-row svg{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;}
+  .clear-btn{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    border:none;background:none;color:var(--text-muted);cursor:pointer;
+    width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:16px;
+  }
+  .clear-btn.show{display:flex;}
+  .clear-btn:hover{background:var(--border-soft);}
+
+  .day-nav{
+    display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;
+    scrollbar-width:none;
+  }
+  .day-nav::-webkit-scrollbar{display:none;}
+  .day-pill{
+    flex:0 0 auto;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text-muted);
+    border-radius:999px;
+    padding:6px 13px;
+    font-size:13px;
+    font-weight:700;
+    font-variant-numeric: tabular-nums;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .day-pill:hover{color:var(--text);border-color:var(--accent);}
+  .day-pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+
+  .month-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .month-tab{
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-muted);
+    border-radius:10px;
+    padding:6px 12px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .month-tab:hover{color:var(--text);}
+  .month-tab.active{background:var(--surface-2);border-color:var(--accent);color:var(--text);}
+
+  .scope-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .all-months-toggle{
+    display:flex;align-items:center;gap:7px;
+    font-size:13px;color:var(--text-muted);
+    cursor:pointer;user-select:none;
+    white-space:nowrap;
+  }
+  .all-months-toggle input{
+    width:16px;height:16px;accent-color:var(--accent);cursor:pointer;
+  }
+  .all-months-toggle.disabled{opacity:.45;pointer-events:none;}
+
+  main{padding-block:22px 60px;}
+
+  .month-heading{
+    font-family:"Playfair Display",serif;font-style:italic;font-weight:700;
+    font-size:19px;color:var(--accent);margin:30px 0 6px;
+  }
+  .month-heading:first-child{margin-top:0;}
+
+  .status-line{color:var(--text-muted);font-size:13px;margin-bottom:18px;}
+  mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 2px;}
+
+  .day-section{margin-bottom:34px;scroll-margin-top:150px;}
+  .day-section-head{
+    display:flex;align-items:baseline;gap:10px;margin-bottom:14px;
+  }
+  .day-section-head .num{
+    font-family:"Playfair Display",serif;font-weight:700;font-size:26px;font-style:italic;color:var(--accent-2);
+  }
+  .day-section-head .label{color:var(--text-muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em;}
+  .day-section-head .rule{flex:1;height:1px;background:var(--border);}
+
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px,1fr));
+    gap:14px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:16px;
+    overflow:hidden;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;
+    transition:transform .12s ease;
+  }
+  .card:hover{transform:translateY(-2px);}
+  .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .card .thumb{
+    position:relative;
+    aspect-ratio:4/3;
+    background:var(--border-soft);
+  }
+  .card .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card .badge{
+    position:absolute;top:9px;left:9px;
+    background:rgba(27,26,22,.72);
+    color:#F4F2E9;
+    font-size:11px;font-weight:700;
+    padding:4px 9px;border-radius:999px;
+    letter-spacing:.02em;
+  }
+  .card .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1;}
+  .card h3{font-size:16.5px;line-height:1.25;}
+  .card .portion{font-size:12.5px;color:var(--text-muted);line-height:1.4;}
+  .card .match{font-size:12px;color:var(--accent);margin-top:4px;}
+
+  .empty-state{
+    text-align:center;padding:60px 20px;color:var(--text-muted);
+  }
+  .empty-state .display{font-size:20px;color:var(--text);margin-bottom:8px;}
+
+  /* modal */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(20,19,16,.55);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:100;
+    padding:0;
+  }
+  .modal-backdrop[hidden]{display:none!important;}
+  .modal{
+    background:var(--bg);
+    width:100%;max-width:720px;
+    max-height:92vh;
+    border-radius:20px 20px 0 0;
+    overflow-y:auto;
+    box-shadow:0 -10px 40px rgba(0,0,0,.35);
+    padding-bottom:calc(30px + env(safe-area-inset-bottom,0px));
+  }
+  @media (min-width:760px){
+    .modal-backdrop{align-items:center;padding:24px;}
+    .modal{border-radius:20px;max-height:88vh;}
+  }
+  .modal-hero{position:relative;}
+  .modal-hero img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;}
+  .modal-close{
+    position:absolute;top:14px;right:14px;
+    width:36px;height:36px;border-radius:50%;
+    background:rgba(20,19,16,.55);color:#fff;border:none;
+    font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close:hover{background:rgba(20,19,16,.75);}
+  .modal-content{padding:22px 24px 8px;}
+  .modal-eyebrow{color:var(--accent-2);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+  .modal h2{font-size:26px;margin-bottom:4px;}
+  .modal .portion{color:var(--text-muted);font-size:14.5px;margin-bottom:18px;}
+  .modal h4{
+    font-family:"Manrope",sans-serif;font-weight:800;font-size:13px;
+    text-transform:uppercase;letter-spacing:.07em;color:var(--accent);
+    margin:22px 0 10px;
+  }
+  .ing-note{color:var(--text-muted);font-size:12.5px;font-weight:600;margin:-6px 0 10px;}
+  .ing-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .ing-list li{
+    display:flex;gap:10px;font-size:14.5px;line-height:1.4;
+    padding-bottom:8px;border-bottom:1px dashed var(--border);
+  }
+  .ing-list li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent-2);margin-top:8px;flex:0 0 auto;}
+  .steps-list{margin:0;padding:0;list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:14px;}
+  .steps-list li{
+    counter-increment:step;
+    display:flex;gap:12px;font-size:14.5px;line-height:1.55;
+  }
+  .steps-list li::before{
+    content:counter(step);
+    flex:0 0 auto;
+    width:26px;height:26px;border-radius:50%;
+    background:var(--accent);color:var(--accent-ink);
+    font-weight:800;font-size:12.5px;
+    display:flex;align-items:center;justify-content:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .note-box{
+    margin-top:20px;
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:13.5px;
+    color:var(--text-muted);
+  }
+  .note-box b{color:var(--text);}
+
+  /* rules modal */
+  .rules-modal .modal-content{padding-top:26px;}
+  .rules-list{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:12px;}
+  .rules-list li{display:flex;gap:10px;font-size:14.5px;line-height:1.5;}
+  .rules-list li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent-2);margin-top:8px;flex:0 0 auto;}
+
+  @media (max-width:480px){
+    .brand h1{font-size:19px;}
+    .card h3{font-size:15.5px;}
+  }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="top-row1">
+      <div class="brand">
+        <h1 id="brandTitle">Меню</h1>
+        <span class="sub" id="brandSub">Transformation 2.0</span>
+      </div>
+      <button class="rules-btn" id="rulesBtn" type="button">Правила питания</button>
+    </div>
+    <div class="search-row">
+      <input id="search" type="search" autocomplete="off" placeholder="Найти рецепт или ингредиент — например, «авокадо» или «торт»">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <button class="clear-btn" id="clearBtn" type="button" aria-label="Очистить">✕</button>
+    </div>
+    <div class="scope-row">
+      <div class="month-tabs" id="monthTabs"></div>
+      <label class="all-months-toggle" id="allMonthsRow" for="allMonthsToggle">
+        <input type="checkbox" id="allMonthsToggle">
+        Искать по всем месяцам
+      </label>
+    </div>
+    <div class="day-nav" id="dayNav"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="status-line" id="statusLine"></p>
+  <div id="content"></div>
+  <div class="empty-state" id="emptyState" hidden>
+    <div class="display">Ничего не нашлось</div>
+    <div>Попробуйте другое слово — название блюда или ингредиент.</div>
+  </div>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+
+<div class="modal-backdrop rules-modal" id="rulesBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button class="modal-close" id="rulesClose" style="position:static;float:right;background:var(--surface-2);color:var(--text);border:1px solid var(--border);">✕</button>
+      <div class="modal-eyebrow">Академия стройности</div>
+      <h2>Правила питания</h2>
+      <ul class="rules-list" id="rulesList"></ul>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  var content = document.getElementById('content');
+  var dayNav = document.getElementById('dayNav');
+  var monthTabs = document.getElementById('monthTabs');
+  var allMonthsRow = document.getElementById('allMonthsRow');
+  var allMonthsToggle = document.getElementById('allMonthsToggle');
+  var searchInput = document.getElementById('search');
+  var clearBtn = document.getElementById('clearBtn');
+  var statusLine = document.getElementById('statusLine');
+  var emptyState = document.getElementById('emptyState');
+  var modalBackdrop = document.getElementById('modalBackdrop');
+  var modal = document.getElementById('modal');
+  var brandTitle = document.getElementById('brandTitle');
+  var brandSub = document.getElementById('brandSub');
+
+  var selectedMonthId = MONTHS[0].id;
+  var totalDays = MONTHS.reduce(function(sum,m){ return sum + m.calendar.length*2; }, 0);
+
+  function norm(s){
+    return (s||'').toLowerCase().replace(/ё/g,'е');
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+
+  function highlight(text, q){
+    var safe = escapeHtml(text);
+    if(!q) return safe;
+    try{
+      var re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+      return safe.replace(re, '<mark>$1</mark>');
+    }catch(e){ return safe; }
+  }
+
+  function monthById(id){ return MONTHS.find(function(m){ return m.id === id; }); }
+
+  // month tabs — hidden while there's only one month loaded, ready for more
+  function buildMonthTabs(){
+    monthTabs.innerHTML = '';
+    if(MONTHS.length <= 1){ monthTabs.hidden = true; return; }
+    monthTabs.hidden = false;
+    MONTHS.forEach(function(m){
+      var tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'month-tab' + (m.id === selectedMonthId ? ' active' : '');
+      tab.textContent = m.label;
+      tab.addEventListener('click', function(){
+        selectedMonthId = m.id;
+        searchInput.value = '';
+        clearBtn.classList.remove('show');
+        buildMonthTabs();
+        buildDayNav();
+        render();
+      });
+      monthTabs.appendChild(tab);
+    });
+  }
+
+  function buildDayNav(){
+    dayNav.innerHTML = '';
+    var m = monthById(selectedMonthId);
+    m.calendar.forEach(function(group){
+      var pill = document.createElement('button');
+      pill.className = 'day-pill';
+      pill.type = 'button';
+      pill.textContent = group.range[0] + '–' + group.range[1];
+      pill.addEventListener('click', function(){
+        searchInput.value = '';
+        clearBtn.classList.remove('show');
+        allMonthsToggle.checked = false;
+        render();
+        var el = document.getElementById('day-'+m.id+'-'+group.range[0]);
+        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+      });
+      dayNav.appendChild(pill);
+    });
+  }
+
+  function updateBrand(){
+    if(MONTHS.length <= 1){
+      brandTitle.textContent = 'Меню · ' + MONTHS[0].label;
+      brandSub.textContent = 'Transformation 2.0 · ' + totalDays + ' дней';
+    } else {
+      brandTitle.textContent = 'Меню';
+      brandSub.textContent = 'Transformation 2.0 · ' + MONTHS.length + ' мес. · ' + totalDays + ' дней';
+    }
+  }
+
+  function updateAllMonthsAvailability(){
+    if(MONTHS.length <= 1){
+      allMonthsRow.classList.add('disabled');
+      allMonthsToggle.checked = false;
+    } else {
+      allMonthsRow.classList.remove('disabled');
+    }
+  }
+
+  function mealBadgeLabel(r){ return r.meal; }
+
+  function cardHTML(r, q){
+    var matchedIngredient = null;
+    if(q){
+      matchedIngredient = (r.ingredients||[]).find(function(i){ return norm(i).indexOf(q) !== -1; });
+    }
+    return (
+      '<article class="card" tabindex="0" data-id="'+r.id+'" role="button" aria-label="'+escapeHtml(r.name)+'">'+
+        '<div class="thumb"><span class="badge">'+escapeHtml(mealBadgeLabel(r))+'</span><img loading="lazy" src="'+r.image+'" alt="'+escapeHtml(r.name)+'"></div>'+
+        '<div class="body">'+
+          '<h3>'+highlight(r.name, q)+'</h3>'+
+          '<div class="portion">'+highlight(r.portion, q)+'</div>'+
+          (matchedIngredient ? '<div class="match">Ингредиент: '+highlight(matchedIngredient, q)+'</div>' : '')+
+        '</div>'+
+      '</article>'
+    );
+  }
+
+  function recipeMatches(r, q){
+    if(!q) return true;
+    if(norm(r.name).indexOf(q) !== -1) return true;
+    if(norm(r.portion).indexOf(q) !== -1) return true;
+    if((r.ingredients||[]).some(function(i){ return norm(i).indexOf(q) !== -1; })) return true;
+    return false;
+  }
+
+  function renderMonthSections(m, q){
+    var html = '';
+    var shown = 0;
+    m.calendar.forEach(function(group){
+      var recs = group.items.map(function(id){ return RECIPES[id]; }).filter(function(r){ return recipeMatches(r, q); });
+      if(recs.length === 0) return;
+      shown += recs.length;
+      html += '<section class="day-section" id="day-'+m.id+'-'+group.range[0]+'">'+
+        '<div class="day-section-head">'+
+          '<span class="num">'+group.range[0]+'–'+group.range[1]+'</span>'+
+          '<span class="label">'+m.label.toLowerCase()+'</span>'+
+          '<span class="rule"></span>'+
+        '</div>'+
+        '<div class="card-grid">'+
+          recs.map(function(r){ return cardHTML(r, q); }).join('')+
+        '</div>'+
+      '</section>';
+    });
+    return {html:html, shown:shown};
+  }
+
+  function render(){
+    var q = norm(searchInput.value.trim());
+    clearBtn.classList.toggle('show', !!searchInput.value.trim());
+    var searchAllMonths = allMonthsToggle.checked && MONTHS.length > 1;
+
+    var html = '';
+    var totalShown = 0;
+    var monthsToRender = (q && searchAllMonths) ? MONTHS : [monthById(selectedMonthId)];
+
+    monthsToRender.forEach(function(m){
+      var res = renderMonthSections(m, q);
+      if(res.shown === 0) return;
+      totalShown += res.shown;
+      if(monthsToRender.length > 1){
+        html += '<div class="month-heading">'+escapeHtml(m.label)+'</div>' + res.html;
+      } else {
+        html += res.html;
+      }
+    });
+
+    content.innerHTML = html;
+    emptyState.hidden = totalShown > 0;
+
+    if(q){
+      statusLine.textContent = 'Найдено рецептов: ' + totalShown + (searchAllMonths ? ' · по всем месяцам' : ' · за ' + monthById(selectedMonthId).label.toLowerCase());
+    } else {
+      var m = monthById(selectedMonthId);
+      statusLine.textContent = 'Все ' + (m.calendar.length*2) + ' дней · ' + m.label.toLowerCase() + ' · нажмите на карточку, чтобы открыть рецепт';
+    }
+
+    // wire up cards
+    content.querySelectorAll('.card').forEach(function(card){
+      card.addEventListener('click', function(){ openModal(card.getAttribute('data-id')); });
+      card.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openModal(card.getAttribute('data-id')); }
+      });
+    });
+  }
+
+  function openModal(id){
+    var r = RECIPES[id];
+    if(!r) return;
+    var html = '<div class="modal-hero"><img src="'+r.image+'" alt="'+escapeHtml(r.name)+'">'+
+      '<button class="modal-close" id="modalCloseBtn" aria-label="Закрыть">✕</button></div>'+
+      '<div class="modal-content">'+
+        '<div class="modal-eyebrow">'+escapeHtml(r.meal)+' · '+(MONTHS.length>1 ? escapeHtml(monthById(r.month).label)+' · ' : '')+'дни '+escapeHtml(r.days)+'</div>'+
+        '<h2>'+escapeHtml(r.name)+'</h2>'+
+        '<div class="portion">'+escapeHtml(r.portion)+'</div>';
+
+    if(r.ingredients && r.ingredients.length){
+      html += '<h4>Ингредиенты</h4>';
+      if(r.ingredientsNote){ html += '<div class="ing-note">'+escapeHtml(r.ingredientsNote)+'</div>'; }
+      html += '<ul class="ing-list">'+ r.ingredients.map(function(i){ return '<li>'+escapeHtml(i)+'</li>'; }).join('') +'</ul>';
+    } else if(r.ingredientsNote){
+      html += '<h4>Ингредиенты</h4><div class="ing-note">'+escapeHtml(r.ingredientsNote)+'</div>';
+    }
+
+    html += '<h4>Способ приготовления</h4><ol class="steps-list">'+ r.steps.map(function(s){ return '<li>'+escapeHtml(s)+'</li>'; }).join('') +'</ol>';
+
+    if(r.note){
+      html += '<div class="note-box"><b>Примечание.</b> '+escapeHtml(r.note)+'</div>';
+    }
+    html += '</div>';
+
+    modal.innerHTML = html;
+    modalBackdrop.hidden = false;
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  }
+  function closeModal(){ modalBackdrop.hidden = true; modal.innerHTML=''; }
+  modalBackdrop.addEventListener('click', function(e){ if(e.target === modalBackdrop) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeModal(); closeRules(); } });
+
+  // rules modal
+  var rulesBackdrop = document.getElementById('rulesBackdrop');
+  var rulesList = document.getElementById('rulesList');
+  RULES.forEach(function(t){
+    var li = document.createElement('li');
+    li.textContent = t;
+    rulesList.appendChild(li);
+  });
+  function openRules(){ rulesBackdrop.hidden = false; }
+  function closeRules(){ rulesBackdrop.hidden = true; }
+  document.getElementById('rulesBtn').addEventListener('click', openRules);
+  document.getElementById('rulesClose').addEventListener('click', closeRules);
+  rulesBackdrop.addEventListener('click', function(e){ if(e.target === rulesBackdrop) closeRules(); });
+
+  searchInput.addEventListener('input', render);
+  clearBtn.addEventListener('click', function(){ searchInput.value=''; clearBtn.classList.remove('show'); render(); searchInput.focus(); });
+  allMonthsToggle.addEventListener('change', render);
+
+  updateBrand();
+  updateAllMonthsAvailability();
+  buildMonthTabs();
+  buildDayNav();
+  render();
+})();
+</script>
